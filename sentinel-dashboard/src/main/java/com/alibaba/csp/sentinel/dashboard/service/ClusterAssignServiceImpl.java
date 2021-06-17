@@ -140,6 +140,13 @@ public class ClusterAssignServiceImpl implements ClusterAssignService {
         return result;
     }
 
+    /**
+     * 设置集群服务状态
+     * @param app app name 服务名
+     * @param clusterMap cluster assign map (server -> clients) 集群节点列表
+     * @param remainingSet unassigned set of machine ID 未被纳入的节点列表
+     * @return
+     */
     @Override
     public ClusterAppAssignResultVO applyAssignToApp(String app, List<ClusterAppAssignMap> clusterMap,
                                                      Set<String> remainingSet) {
@@ -149,31 +156,42 @@ public class ClusterAssignServiceImpl implements ClusterAssignService {
         Set<String> failedClientSet = new HashSet<>();
 
         // Assign server and apply config.
+        // 通知token server
         clusterMap.stream()
             .filter(Objects::nonNull)
             .filter(ClusterAppAssignMap::getBelongToApp)
             .map(e -> {
                 String ip = e.getIp();
                 int commandPort = parsePort(e);
+                //设置节点为token server模式
                 CompletableFuture<Void> f = modifyMode(ip, commandPort, ClusterStateManager.CLUSTER_SERVER)
+                        //修改token server的传输协议
                     .thenCompose(v -> applyServerConfigChange(app, ip, commandPort, e));
                 return Tuple2.of(e.getMachineId(), f);
             })
             .forEach(t -> handleFutureSync(t, failedServerSet));
 
         // Assign client of servers and apply config.
+        // 通知所有client
         clusterMap.parallelStream()
             .filter(Objects::nonNull)
             .forEach(e -> applyAllClientConfigChange(app, e, failedClientSet));
 
         // Unbind remaining (unassigned) machines.
+        // 通知剔除集群的服务
         applyAllRemainingMachineSet(app, remainingSet, failedClientSet);
-
+        //返回操作是被的服务集合
         return new ClusterAppAssignResultVO()
             .setFailedClientSet(failedClientSet)
             .setFailedServerSet(failedServerSet);
     }
 
+    /**
+     * 剔除集群
+     * @param app
+     * @param remainingSet
+     * @param failedSet
+     */
     private void applyAllRemainingMachineSet(String app, Set<String> remainingSet, Set<String> failedSet) {
         if (remainingSet == null || remainingSet.isEmpty()) {
             return;
@@ -192,6 +210,12 @@ public class ClusterAssignServiceImpl implements ClusterAssignService {
             .forEach(t -> handleFutureSync(t, failedSet));
     }
 
+    /**
+     * 通知所有 token client
+     * @param app
+     * @param assignMap
+     * @param failedSet
+     */
     private void applyAllClientConfigChange(String app, ClusterAppAssignMap assignMap,
                                             Set<String> failedSet) {
         Set<String> clientSet = assignMap.getClientSet();
@@ -217,6 +241,7 @@ public class ClusterAssignServiceImpl implements ClusterAssignService {
             .forEach(t -> handleFutureSync(t, failedSet));
     }
 
+
     private void handleFutureSync(Tuple2<String, CompletableFuture<Void>> t, Set<String> failedSet) {
         try {
             t.r2.get(10, TimeUnit.SECONDS);
@@ -230,6 +255,14 @@ public class ClusterAssignServiceImpl implements ClusterAssignService {
         }
     }
 
+    /**
+     * 通知token server
+     * @param app
+     * @param ip
+     * @param commandPort
+     * @param assignMap
+     * @return
+     */
     private CompletableFuture<Void> applyServerConfigChange(String app, String ip, int commandPort,
                                                             ClusterAppAssignMap assignMap) {
         ServerTransportConfig transportConfig = new ServerTransportConfig()
@@ -240,6 +273,14 @@ public class ClusterAssignServiceImpl implements ClusterAssignService {
             .thenCompose(v -> applyServerNamespaceSetConfig(app, ip, commandPort, assignMap));
     }
 
+    /**
+     * 修改token server
+     * @param app
+     * @param ip
+     * @param commandPort
+     * @param assignMap
+     * @return
+     */
     private CompletableFuture<Void> applyServerFlowConfigChange(String app, String ip, int commandPort,
                                                                 ClusterAppAssignMap assignMap) {
         Double maxAllowedQps = assignMap.getMaxAllowedQps();
@@ -259,6 +300,13 @@ public class ClusterAssignServiceImpl implements ClusterAssignService {
         return sentinelApiClient.modifyClusterServerNamespaceSet(app, ip, commandPort, namespaceSet);
     }
 
+    /**
+     * 修改节点集群模式
+     * @param ip
+     * @param port
+     * @param mode 模式，0：client，1：server，-1：非集群
+     * @return
+     */
     private CompletableFuture<Void> modifyMode(String ip, int port, int mode) {
         return sentinelApiClient.modifyClusterMode(ip, port, mode);
     }

@@ -1,5 +1,5 @@
 # IntelliJ project files
-.idea/
+#.idea/
 *.iml
 out
 gen
@@ -8,7 +8,7 @@ gen
 .history/
 
 # Maven
-target/
+#target/
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup

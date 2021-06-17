@@ -25,6 +25,9 @@ import com.alibaba.csp.sentinel.command.annotation.CommandMapping;
 import com.alibaba.csp.sentinel.log.RecordLog;
 
 /**
+ * 设置集群模式接口
+ * 0：token client
+ * 1：token server
  * @author Eric Zhao
  * @since 1.4.0
  */
@@ -42,7 +45,7 @@ public class ModifyClusterModeCommandHandler implements CommandHandler<String> {
                 return CommandResponse.ofFailure(new IllegalStateException("token server mode not available: no SPI found"));
             }
             RecordLog.info("[ModifyClusterModeCommandHandler] Modifying cluster mode to: {}", mode);
-
+            //设置本服务集群模式
             ClusterStateManager.applyState(mode);
             return CommandResponse.ofSuccess("success");
         } catch (NumberFormatException ex) {

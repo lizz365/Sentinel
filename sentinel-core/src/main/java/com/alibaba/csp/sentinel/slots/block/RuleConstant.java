@@ -22,8 +22,9 @@ import com.alibaba.csp.sentinel.node.IntervalProperty;
  * @author jialiang.linjl
  */
 public final class RuleConstant {
-
+    // 流控阀值类型 - 线程数
     public static final int FLOW_GRADE_THREAD = 0;
+    // 流控阀值类型 - QPS
     public static final int FLOW_GRADE_QPS = 1;
 
     public static final int DEGRADE_GRADE_RT = 0;
@@ -41,14 +42,20 @@ public final class RuleConstant {
 
     public static final int AUTHORITY_WHITE = 0;
     public static final int AUTHORITY_BLACK = 1;
-
+    // 流控模式-直接
     public static final int STRATEGY_DIRECT = 0;
+    // 流控模式-关联
     public static final int STRATEGY_RELATE = 1;
+    // 流控模式-链路
     public static final int STRATEGY_CHAIN = 2;
 
+    // 流控效果 - 拒绝
     public static final int CONTROL_BEHAVIOR_DEFAULT = 0;
+    // 流控效果 - 预热
     public static final int CONTROL_BEHAVIOR_WARM_UP = 1;
+    // 流控效果 - 限流
     public static final int CONTROL_BEHAVIOR_RATE_LIMITER = 2;
+    // 流控效果 - 预热+限流
     public static final int CONTROL_BEHAVIOR_WARM_UP_RATE_LIMITER = 3;
 
     public static final int DEFAULT_BLOCK_STRATEGY = 0;

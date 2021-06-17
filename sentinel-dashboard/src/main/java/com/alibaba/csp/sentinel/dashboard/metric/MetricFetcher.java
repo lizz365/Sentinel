@@ -63,7 +63,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Fetch metric of machines.
- *
+ * 获取客户端本地流量监控信息
  * @author leyou
  */
 @Component

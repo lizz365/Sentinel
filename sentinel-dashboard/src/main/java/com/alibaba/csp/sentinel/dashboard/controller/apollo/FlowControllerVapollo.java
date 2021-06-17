@@ -13,35 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.csp.sentinel.dashboard.controller.v2;
-
-import java.util.Date;
-import java.util.List;
+package com.alibaba.csp.sentinel.dashboard.controller.apollo;
 
 import com.alibaba.csp.sentinel.dashboard.auth.AuthAction;
-import com.alibaba.csp.sentinel.dashboard.auth.AuthService;
 import com.alibaba.csp.sentinel.dashboard.auth.AuthService.PrivilegeType;
-import com.alibaba.csp.sentinel.util.StringUtil;
-
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.FlowRuleEntity;
+import com.alibaba.csp.sentinel.dashboard.domain.Result;
 import com.alibaba.csp.sentinel.dashboard.repository.rule.InMemoryRuleRepositoryAdapter;
 import com.alibaba.csp.sentinel.dashboard.rule.DynamicRuleProvider;
 import com.alibaba.csp.sentinel.dashboard.rule.DynamicRulePublisher;
-import com.alibaba.csp.sentinel.dashboard.domain.Result;
-
+import com.alibaba.csp.sentinel.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * Flow rule controller (v2).
@@ -50,25 +39,25 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 1.4.0
  */
 @RestController
-@RequestMapping(value = "/v2/flow")
-public class FlowControllerV2 {
+@RequestMapping(value = "/apollo/flow")
+public class FlowControllerVapollo {
 
-    private final Logger logger = LoggerFactory.getLogger(FlowControllerV2.class);
+    private final Logger logger = LoggerFactory.getLogger(FlowControllerVapollo.class);
 
     @Autowired
     private InMemoryRuleRepositoryAdapter<FlowRuleEntity> repository;
 
     @Autowired
-    @Qualifier("flowRuleDefaultProvider")
-//    @Qualifier("flowRuleApolloProvider")
+//    @Qualifier("flowRuleDefaultProvider")
+    @Qualifier("apolloFlowRuleProvider")
     private DynamicRuleProvider<List<FlowRuleEntity>> ruleProvider;
     @Autowired
-    @Qualifier("flowRuleDefaultPublisher")
-//    @Qualifier("flowRuleApolloPublisher")
+//    @Qualifier("flowRuleDefaultPublisher")
+    @Qualifier("apolloFlowRulePublisher")
     private DynamicRulePublisher<List<FlowRuleEntity>> rulePublisher;
 
     @GetMapping("/rules")
-    @AuthAction(PrivilegeType.READ_RULE)
+//    @AuthAction(PrivilegeType.READ_RULE)
     public Result<List<FlowRuleEntity>> apiQueryMachineRules(@RequestParam String app) {
 
         if (StringUtil.isEmpty(app)) {
@@ -137,7 +126,7 @@ public class FlowControllerV2 {
     }
 
     @PostMapping("/rule")
-    @AuthAction(value = AuthService.PrivilegeType.WRITE_RULE)
+//    @AuthAction(value = PrivilegeType.WRITE_RULE) //权限校验
     public Result<FlowRuleEntity> apiAddFlowRule(@RequestBody FlowRuleEntity entity) {
 
         Result<FlowRuleEntity> checkResult = checkEntityInternal(entity);
@@ -151,6 +140,7 @@ public class FlowControllerV2 {
         entity.setLimitApp(entity.getLimitApp().trim());
         entity.setResource(entity.getResource().trim());
         try {
+            //注册到本地缓存中
             entity = repository.save(entity);
             publishRules(entity.getApp());
         } catch (Throwable throwable) {
@@ -161,8 +151,7 @@ public class FlowControllerV2 {
     }
 
     @PutMapping("/rule/{id}")
-    @AuthAction(AuthService.PrivilegeType.WRITE_RULE)
-
+    @AuthAction(PrivilegeType.WRITE_RULE)
     public Result<FlowRuleEntity> apiUpdateFlowRule(@PathVariable("id") Long id,
                                                     @RequestBody FlowRuleEntity entity) {
         if (id == null || id <= 0) {
@@ -222,6 +211,7 @@ public class FlowControllerV2 {
     }
 
     private void publishRules(/*@NonNull*/ String app) throws Exception {
+        //从本地缓存中获取
         List<FlowRuleEntity> rules = repository.findAllByApp(app);
         rulePublisher.publish(app, rules);
     }

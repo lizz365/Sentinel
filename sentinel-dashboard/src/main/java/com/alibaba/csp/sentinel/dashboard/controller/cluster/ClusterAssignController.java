@@ -35,8 +35,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * @author Eric Zhao
- * @since 1.4.1
+ * 服务节点集群分配接口
  */
 @RestController
 @RequestMapping("/cluster/assign")
@@ -47,6 +46,12 @@ public class ClusterAssignController {
     @Autowired
     private ClusterAssignService clusterAssignService;
 
+    /**
+     * 设置所有集群服务，已弃用
+     * @param app
+     * @param assignRequest
+     * @return
+     */
     @PostMapping("/all_server/{app}")
     public Result<ClusterAppAssignResultVO> apiAssignAllClusterServersOfApp(@PathVariable String app,
                                                                             @RequestBody
@@ -67,6 +72,12 @@ public class ClusterAssignController {
         }
     }
 
+    /**
+     * 设置服务模式
+     * @param app
+     * @param assignRequest
+     * @return
+     */
     @PostMapping("/single_server/{app}")
     public Result<ClusterAppAssignResultVO> apiAssignSingleClusterServersOfApp(@PathVariable String app,
                                                                                @RequestBody ClusterAppSingleServerAssignRequest assignRequest) {
@@ -85,6 +96,12 @@ public class ClusterAssignController {
         }
     }
 
+    /**
+     * 解除token server
+     * @param app
+     * @param machineIds
+     * @return
+     */
     @PostMapping("/unbind_server/{app}")
     public Result<ClusterAppAssignResultVO> apiUnbindClusterServersOfApp(@PathVariable String app,
                                                                          @RequestBody Set<String> machineIds) {

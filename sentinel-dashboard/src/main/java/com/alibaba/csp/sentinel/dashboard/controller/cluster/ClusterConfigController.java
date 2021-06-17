@@ -144,7 +144,9 @@ public class ClusterConfigController {
             return Result.ofFail(-1, throwable.getMessage());
         }
     }
-
+    /**
+     * 集群状态
+     */
     @GetMapping("/server_state/{app}")
     public Result<List<AppClusterServerStateWrapVO>> apiGetClusterServerStateOfApp(@PathVariable String app) {
         if (StringUtil.isEmpty(app)) {

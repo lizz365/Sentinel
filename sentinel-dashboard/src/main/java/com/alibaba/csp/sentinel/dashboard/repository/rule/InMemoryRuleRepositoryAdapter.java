@@ -25,6 +25,7 @@ import com.alibaba.csp.sentinel.dashboard.discovery.MachineInfo;
 import com.alibaba.csp.sentinel.util.AssertUtil;
 
 /**
+ * 规则本地缓存操作
  * @author leyou
  */
 public abstract class InMemoryRuleRepositoryAdapter<T extends RuleEntity> implements RuleRepository<T, Long> {

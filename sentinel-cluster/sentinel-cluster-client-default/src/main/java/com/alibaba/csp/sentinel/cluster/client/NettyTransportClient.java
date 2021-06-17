@@ -206,6 +206,7 @@ public class NettyTransportClient implements ClusterTransportClient {
 
     @Override
     public ClusterResponse sendRequest(ClusterRequest request) throws Exception {
+        // fixme 连接断开无法重连，待验证。
         if (!isReady()) {
             throw new SentinelClusterException(ClusterErrorMessages.CLIENT_NOT_READY);
         }

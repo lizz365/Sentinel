@@ -40,6 +40,7 @@ import com.alibaba.fastjson.JSONArray;
 import static com.alibaba.csp.sentinel.transport.util.WritableDataSourceRegistry.*;
 
 /**
+ * sentinel client 修改规则入口
  * @author jialiang.linjl
  * @author Eric Zhao
  */
@@ -51,6 +52,7 @@ public class ModifyRulesCommandHandler implements CommandHandler<String> {
     public CommandResponse<String> handle(CommandRequest request) {
         // XXX from 1.7.2, force to fail when fastjson is older than 1.2.12
         // We may need a better solution on this.
+        // fastjson版本要求大于1.2.75
         if (VersionUtil.fromVersionString(JSON.VERSION) < FASTJSON_MINIMAL_VER) {
             // fastjson too old
             return CommandResponse.ofFailure(new RuntimeException("The \"fastjson-" + JSON.VERSION
@@ -71,8 +73,9 @@ public class ModifyRulesCommandHandler implements CommandHandler<String> {
         RecordLog.info("Receiving rule change (type: {}): {}", type, data);
 
         String result = "success";
-
+        //判断规则类型
         if (FLOW_RULE_TYPE.equalsIgnoreCase(type)) {
+            //流控规则
             List<FlowRule> flowRules = JSONArray.parseArray(data, FlowRule.class);
             FlowRuleManager.loadRules(flowRules);
             if (!writeToDataSource(getFlowDataSource(), flowRules)) {
@@ -80,6 +83,7 @@ public class ModifyRulesCommandHandler implements CommandHandler<String> {
             }
             return CommandResponse.ofSuccess(result);
         } else if (AUTHORITY_RULE_TYPE.equalsIgnoreCase(type)) {
+            // 授权规则
             List<AuthorityRule> rules = JSONArray.parseArray(data, AuthorityRule.class);
             AuthorityRuleManager.loadRules(rules);
             if (!writeToDataSource(getAuthorityDataSource(), rules)) {
@@ -87,6 +91,7 @@ public class ModifyRulesCommandHandler implements CommandHandler<String> {
             }
             return CommandResponse.ofSuccess(result);
         } else if (DEGRADE_RULE_TYPE.equalsIgnoreCase(type)) {
+            // 降级规则
             List<DegradeRule> rules = JSONArray.parseArray(data, DegradeRule.class);
             DegradeRuleManager.loadRules(rules);
             if (!writeToDataSource(getDegradeDataSource(), rules)) {
@@ -94,6 +99,7 @@ public class ModifyRulesCommandHandler implements CommandHandler<String> {
             }
             return CommandResponse.ofSuccess(result);
         } else if (SYSTEM_RULE_TYPE.equalsIgnoreCase(type)) {
+            // 系统规则
             List<SystemRule> rules = JSONArray.parseArray(data, SystemRule.class);
             SystemRuleManager.loadRules(rules);
             if (!writeToDataSource(getSystemSource(), rules)) {
@@ -105,7 +111,7 @@ public class ModifyRulesCommandHandler implements CommandHandler<String> {
     }
 
     /**
-     * Write target value to given data source.
+     * 规则写入数据源
      *
      * @param dataSource writable data source
      * @param value target value to save
@@ -125,8 +131,12 @@ public class ModifyRulesCommandHandler implements CommandHandler<String> {
     }
 
     private static final String WRITE_DS_FAILURE_MSG = "partial success (write data source failed)";
+    // 流控
     private static final String FLOW_RULE_TYPE = "flow";
+    // 降级规则
     private static final String DEGRADE_RULE_TYPE = "degrade";
+    // 系统规则
     private static final String SYSTEM_RULE_TYPE = "system";
+    // 授权
     private static final String AUTHORITY_RULE_TYPE = "authority";
 }

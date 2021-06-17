@@ -31,6 +31,7 @@ import com.alibaba.csp.sentinel.dashboard.discovery.MachineInfo;
 import com.alibaba.csp.sentinel.dashboard.domain.Result;
 import com.alibaba.csp.sentinel.dashboard.repository.rule.InMemoryRuleRepositoryAdapter;
 
+import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +62,13 @@ public class FlowControllerV1 {
     @Autowired
     private SentinelApiClient sentinelApiClient;
 
+    /**
+     * 查询节点所有流控规则
+     * @param app
+     * @param ip
+     * @param port
+     * @return
+     */
     @GetMapping("/rules")
     @AuthAction(PrivilegeType.READ_RULE)
     public Result<List<FlowRuleEntity>> apiQueryMachineRules(@RequestParam String app,
@@ -133,9 +141,15 @@ public class FlowControllerV1 {
         return null;
     }
 
+    /**
+     * 新建流控规则
+     * @param entity
+     * @return
+     */
     @PostMapping("/rule")
     @AuthAction(PrivilegeType.WRITE_RULE)
     public Result<FlowRuleEntity> apiAddFlowRule(@RequestBody FlowRuleEntity entity) {
+        String str = JSON.toJSONString(entity);
         Result<FlowRuleEntity> checkResult = checkEntityInternal(entity);
         if (checkResult != null) {
             return checkResult;
@@ -158,6 +172,21 @@ public class FlowControllerV1 {
         }
     }
 
+    /**
+     * 修改规则
+     * @param id flowid
+     * @param app
+     * @param limitApp 来源限制，default所有来源
+     * @param resource token
+     * @param grade 阀值类型，0:线程，1：qps
+     * @param count 阀值
+     * @param strategy 模式：直接/关联/链路
+     * @param refResource 其他源，strategy非0时必填
+     * @param controlBehavior 控制类型
+     * @param warmUpPeriodSec 预热时间
+     * @param maxQueueingTimeMs 最大排队时间
+     * @return
+     */
     @PutMapping("/save.json")
     @AuthAction(PrivilegeType.WRITE_RULE)
     public Result<FlowRuleEntity> apiUpdateFlowRule(Long id, String app,
@@ -168,6 +197,7 @@ public class FlowControllerV1 {
         if (id == null) {
             return Result.ofFail(-1, "id can't be null");
         }
+        //获取已存在的规则控制节点
         FlowRuleEntity entity = repository.findById(id);
         if (entity == null) {
             return Result.ofFail(-1, "id " + id + " dose not exist");
@@ -223,6 +253,7 @@ public class FlowControllerV1 {
         Date date = new Date();
         entity.setGmtModified(date);
         try {
+            //更新缓存
             entity = repository.save(entity);
             if (entity == null) {
                 return Result.ofFail(-1, "save entity fail: null");
@@ -238,6 +269,11 @@ public class FlowControllerV1 {
         }
     }
 
+    /**
+     * 删除规则
+     * @param id
+     * @return
+     */
     @DeleteMapping("/delete.json")
     @AuthAction(PrivilegeType.WRITE_RULE)
     public Result<Long> apiDeleteFlowRule(Long id) {
@@ -266,6 +302,13 @@ public class FlowControllerV1 {
         }
     }
 
+    /**
+     * 规则同步到节点
+     * @param app
+     * @param ip
+     * @param port
+     * @return
+     */
     private CompletableFuture<Void> publishRules(String app, String ip, Integer port) {
         List<FlowRuleEntity> rules = repository.findAllByMachine(MachineInfo.of(app, ip, port));
         return sentinelApiClient.setFlowRuleOfMachineAsync(app, ip, port, rules);

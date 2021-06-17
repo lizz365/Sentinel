@@ -27,18 +27,23 @@ import com.alibaba.csp.sentinel.property.SentinelProperty;
 import com.alibaba.csp.sentinel.util.TimeUtil;
 
 /**
- * <p>
- * Global state manager for Sentinel cluster.
- * This enables switching between cluster token client and server mode.
- * </p>
- *
+ * Sentinel群集的全局状态管理器。
+ * 集群状态状态切换
  * @author Eric Zhao
  * @since 1.4.0
  */
 public final class ClusterStateManager {
-
+    /**
+     * token client状态
+     */
     public static final int CLUSTER_CLIENT = 0;
+    /**
+     * token server 状态
+     */
     public static final int CLUSTER_SERVER = 1;
+    /**
+     * 非集群状态
+     */
     public static final int CLUSTER_NOT_STARTED = -1;
 
     private static volatile int mode = CLUSTER_NOT_STARTED;
@@ -74,10 +79,8 @@ public final class ClusterStateManager {
     }
 
     /**
-     * <p>
-     * Set current mode to client mode. If Sentinel currently works in server mode,
-     * it will be turned off. Then the cluster client will be started.
-     * </p>
+     * 设置节点为token client，并启动
+     * @return
      */
     public static boolean setToClient() {
         if (mode == CLUSTER_CLIENT) {
@@ -89,8 +92,13 @@ public final class ClusterStateManager {
         return startClient();
     }
 
+    /**
+     * 开启token client模式
+     * @return
+     */
     private static boolean startClient() {
         try {
+            //如果又token server则先关闭
             EmbeddedClusterTokenServer server = EmbeddedClusterTokenServerProvider.getServer();
             if (server != null) {
                 server.stop();
@@ -110,6 +118,10 @@ public final class ClusterStateManager {
         }
     }
 
+    /**
+     * 停止集群token client
+     * @return
+     */
     private static boolean stopClient() {
         try {
             ClusterTokenClient tokenClient = TokenClientProvider.getClient();
@@ -128,10 +140,7 @@ public final class ClusterStateManager {
     }
 
     /**
-     * <p>
-     * Set current mode to server mode. If Sentinel currently works in client mode,
-     * it will be turned off. Then the cluster server will be started.
-     * </p>
+     * 设置节点为token server，并启动
      */
     public static boolean setToServer() {
         if (mode == CLUSTER_SERVER) {
@@ -143,12 +152,18 @@ public final class ClusterStateManager {
         return startServer();
     }
 
+    /**
+     * 启动token server
+     * @return
+     */
     private static boolean startServer() {
         try {
+            //如果是token client，先关闭。
             ClusterTokenClient tokenClient = TokenClientProvider.getClient();
             if (tokenClient != null) {
                 tokenClient.stop();
             }
+            //启动Embedded模式集群
             EmbeddedClusterTokenServer server = EmbeddedClusterTokenServerProvider.getServer();
             if (server != null) {
                 server.start();
@@ -164,6 +179,10 @@ public final class ClusterStateManager {
         }
     }
 
+    /**
+     * 停止token server服务
+     * @return
+     */
     private static boolean stopServer() {
         try {
             EmbeddedClusterTokenServer server = EmbeddedClusterTokenServerProvider.getServer();
@@ -182,8 +201,8 @@ public final class ClusterStateManager {
     }
 
     /**
-     * The interval between two change operations should be greater than {@code MIN_INTERVAL} (by default 10s).
-     * Or we need to wait for a while.
+     * 状态调整间隔时间。
+     * 防止过快导致失败
      */
     private static void sleepIfNeeded() {
         if (lastModified <= 0) {
@@ -217,6 +236,11 @@ public final class ClusterStateManager {
         }
     }
 
+    /**
+     * 切换服务状态
+     * @param state 0：token client，1：token server，-1：非集群
+     * @return
+     */
     private static boolean applyStateInternal(Integer state) {
         if (state == null || state < CLUSTER_NOT_STARTED) {
             return false;
@@ -243,6 +267,9 @@ public final class ClusterStateManager {
         }
     }
 
+    /**
+     * 停止集群模式
+     */
     private static void setStop() {
         if (mode == CLUSTER_NOT_STARTED) {
             return;
@@ -258,7 +285,7 @@ public final class ClusterStateManager {
     }
 
     /**
-     * Apply given state to cluster mode.
+     * 修改集群状态
      *
      * @param state valid state to apply
      */
@@ -270,5 +297,8 @@ public final class ClusterStateManager {
         mode = CLUSTER_SERVER;
     }
 
+    /**
+     * 状态调整间隔时间
+     */
     private static final int MIN_INTERVAL = 5 * 1000;
 }

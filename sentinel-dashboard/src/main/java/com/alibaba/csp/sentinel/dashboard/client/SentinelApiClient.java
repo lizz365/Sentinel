@@ -86,7 +86,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Communicate with Sentinel client.
- *
+ * 操作节点接口
  * @author leyou
  */
 @Component
@@ -114,6 +114,7 @@ public class SentinelApiClient {
     private static final String MODIFY_CLUSTER_SERVER_TRANSPORT_CONFIG_PATH = "cluster/server/modifyTransportConfig";
     private static final String MODIFY_CLUSTER_SERVER_FLOW_CONFIG_PATH = "cluster/server/modifyFlowConfig";
     private static final String MODIFY_CLUSTER_SERVER_NAMESPACE_SET_PATH = "cluster/server/modifyNamespaceSet";
+    private static final String MODIFY_CLUSTER_SERVER_CONFIG_PATH = " cluster/server/modifyFlowRules";
 
     private static final String FETCH_GATEWAY_API_PATH = "gateway/getApiDefinitions";
     private static final String MODIFY_GATEWAY_API_PATH = "gateway/updateApiDefinitions";
@@ -255,7 +256,7 @@ public class SentinelApiClient {
     
     /**
      * No app specified, force to GET
-     * 
+     * 没有指定app，强制使用get请求
      * @param ip
      * @param port
      * @param api
@@ -268,7 +269,7 @@ public class SentinelApiClient {
 
     /**
      * Prefer to execute request using POST
-     * 
+     * 创建请求
      * @param app
      * @param ip
      * @param port
@@ -288,6 +289,7 @@ public class SentinelApiClient {
         if (params == null) {
             params = Collections.emptyMap();
         }
+        //是否使用get请求
         if (!useHttpPost || !isSupportPost(app, ip, port)) {
             // Using GET in older versions, append parameters after url
             if (!params.isEmpty()) {
@@ -305,7 +307,12 @@ public class SentinelApiClient {
                     postRequest(urlBuilder.toString(), params, isSupportEnhancedContentType(app, ip, port)));
         }
     }
-    
+
+    /**
+     * 处理请求
+     * @param request
+     * @return
+     */
     private CompletableFuture<String> executeCommand(HttpUriRequest request) {
         CompletableFuture<String> future = new CompletableFuture<>();
         httpClient.execute(request, new FutureCallback<HttpResponse>() {
@@ -627,6 +634,13 @@ public class SentinelApiClient {
         }
     }
 
+    /**
+     * 调用节点接口修改集群模式
+     * @param ip
+     * @param port
+     * @param mode
+     * @return
+     */
     public CompletableFuture<Void> modifyClusterMode(String ip, int port, int mode) {
         if (StringUtil.isBlank(ip) || port <= 0) {
             return AsyncUtils.newFailedFuture(new IllegalArgumentException("Invalid parameter"));

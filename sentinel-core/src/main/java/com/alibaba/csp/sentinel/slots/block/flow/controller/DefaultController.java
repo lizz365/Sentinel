@@ -47,12 +47,16 @@ public class DefaultController implements TrafficShapingController {
 
     @Override
     public boolean canPass(Node node, int acquireCount, boolean prioritized) {
+        //已用token数
         int curCount = avgUsedTokens(node);
+        // 判断是否大于限制数量
         if (curCount + acquireCount > count) {
+            // qps，开启排队等待
             if (prioritized && grade == RuleConstant.FLOW_GRADE_QPS) {
                 long currentTime;
                 long waitInMs;
                 currentTime = TimeUtil.currentTimeMillis();
+                //等待时间
                 waitInMs = node.tryOccupyNext(currentTime, acquireCount, count);
                 if (waitInMs < OccupyTimeoutProperty.getOccupyTimeout()) {
                     node.addWaitingRequest(currentTime + waitInMs, acquireCount);
@@ -68,10 +72,16 @@ public class DefaultController implements TrafficShapingController {
         return true;
     }
 
+    /**
+     * 获取已用并发数
+     * @param node
+     * @return
+     */
     private int avgUsedTokens(Node node) {
         if (node == null) {
             return DEFAULT_AVG_USED_TOKENS;
         }
+        //线程并发或者qps并发
         return grade == RuleConstant.FLOW_GRADE_THREAD ? node.curThreadNum() : (int)(node.passQps());
     }
 

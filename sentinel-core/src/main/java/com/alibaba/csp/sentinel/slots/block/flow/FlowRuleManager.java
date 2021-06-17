@@ -36,13 +36,8 @@ import com.alibaba.csp.sentinel.property.PropertyListener;
 import com.alibaba.csp.sentinel.property.SentinelProperty;
 
 /**
- * <p>
- * One resources can have multiple rules. And these rules take effects in the following order:
- * <ol>
- * <li>requests from specified caller</li>
- * <li>no specified caller</li>
- * </ol>
- * </p>
+ * 本地缓存规则管理
+ * 一个token资源可以有多个规则，指定调用方的优先级高
  *
  * @author jialiang.linjl
  * @author Eric Zhao
@@ -131,6 +126,12 @@ public class FlowRuleManager {
         return flowRules.get().containsKey(resource);
     }
 
+    /**
+     * 是否other源
+     * @param origin
+     * @param resourceName
+     * @return
+     */
     public static boolean isOtherOrigin(String origin, String resourceName) {
         if (StringUtil.isEmpty(origin)) {
             return false;
@@ -149,8 +150,15 @@ public class FlowRuleManager {
         return true;
     }
 
+    /**
+     * 流控规则监听器，用于动态调整
+     */
     private static final class FlowPropertyListener implements PropertyListener<List<FlowRule>> {
 
+        /**
+         * 更新规则
+         * @param value updated value.
+         */
         @Override
         public void configUpdate(List<FlowRule> value) {
             Map<String, List<FlowRule>> rules = FlowRuleUtil.buildFlowRuleMap(value);
@@ -160,6 +168,10 @@ public class FlowRuleManager {
             RecordLog.info("[FlowRuleManager] Flow rules received: {}", rules);
         }
 
+        /**
+         *
+         * @param conf
+         */
         @Override
         public void configLoad(List<FlowRule> conf) {
             Map<String, List<FlowRule>> rules = FlowRuleUtil.buildFlowRuleMap(conf);
