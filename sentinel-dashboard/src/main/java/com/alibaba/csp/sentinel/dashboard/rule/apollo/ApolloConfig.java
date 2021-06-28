@@ -38,7 +38,7 @@ public class ApolloConfig {
     /**
      * 通过api操作apollo的token，必须与操作user匹配，在apollo管理页面中开通
      */
-    public static final String SENTINEL_APOLLO_TOKEN = "xxx";
+    public static final String SENTINEL_APOLLO_TOKEN = "xxxx";
     /**
      * apollo中存储数据的项目id
      */
@@ -47,6 +47,7 @@ public class ApolloConfig {
      * apollo中存储数据的namespace，需要新建公共namespace
      */
     public static final String SENTINEL_APOLLO_NAMESPACE = "jiagou.sentinel-application";
+    public static final String SENTINEL_CLUSTER_APOLLO_NAMESPACE = "jiagou.sentinel-cluster";
     /**
      * 环境列表没有特别新建集群，就是default。
      */
@@ -54,7 +55,7 @@ public class ApolloConfig {
     /**
      * 操作数据apollo的用户名称，在apollo中需要有操作权限
      */
-    public static final String SENTINEL_APOLLO_USER = "lizz";
+    public static final String SENTINEL_APOLLO_USER = "lizhenzhong";
 
     @Bean
     public Converter<List<FlowRuleEntity>, String> flowRuleEntityEncoder() {

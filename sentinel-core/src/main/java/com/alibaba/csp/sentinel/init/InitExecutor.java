@@ -43,6 +43,7 @@ public final class InitExecutor {
             return;
         }
         try {
+            //使用spi技术加载InitFunc方法
             List<InitFunc> initFuncs = SpiLoader.of(InitFunc.class).loadInstanceListSorted();
             List<OrderWrapper> initList = new ArrayList<OrderWrapper>();
             for (InitFunc initFunc : initFuncs) {

@@ -52,7 +52,7 @@ public class ApolloFlowRuleProvider implements DynamicRuleProvider<List<FlowRule
         OpenNamespaceDTO openNamespaceDTO =
                 apolloOpenApiClient.getNamespace(
                         ApolloConfig.SENTINEL_APOLLO_APPID, SENTINEL_APOLLO_ENV,
-                        ApolloConfig.SENTINEL_APOLLO_CLUSTERNAME, ApolloConfig.SENTINEL_APOLLO_NAMESPACE);
+                        ApolloConfig.SENTINEL_APOLLO_CLUSTERNAME, ApolloConfig.SENTINEL_CLUSTER_APOLLO_NAMESPACE);
         String rules = openNamespaceDTO
                 .getItems()
                 .stream()

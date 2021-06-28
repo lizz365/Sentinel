@@ -15,12 +15,10 @@
  */
 package com.alibaba.csp.sentinel.dashboard.rule.apollo;
 
-import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.FlowRuleEntity;
+import com.alibaba.csp.sentinel.dashboard.domain.cluster.request.ClusterAppAssignMap;
 import com.alibaba.csp.sentinel.dashboard.rule.DynamicRulePublisher;
-import com.alibaba.csp.sentinel.datasource.Converter;
-
 import com.alibaba.csp.sentinel.util.AssertUtil;
-
+import com.alibaba.fastjson.JSON;
 import com.ctrip.framework.apollo.openapi.client.ApolloOpenApiClient;
 import com.ctrip.framework.apollo.openapi.dto.NamespaceReleaseDTO;
 import com.ctrip.framework.apollo.openapi.dto.OpenItemDTO;
@@ -28,14 +26,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-
 import java.util.List;
 
 /**
  * 将规则上传至apollo中
  */
-@Component("apolloFlowRulePublisher")
-public class ApolloFlowRulePublisher implements DynamicRulePublisher<List<FlowRuleEntity>> {
+@Component("apolloClusterAppAssignPublisher")
+public class ApolloClusterAppAssignPublisher implements DynamicRulePublisher<List<ClusterAppAssignMap>> {
     /**
      * apollo动态环境配置，便于测试、线上环境切换
      */
@@ -44,26 +41,22 @@ public class ApolloFlowRulePublisher implements DynamicRulePublisher<List<FlowRu
 
     @Autowired
     private ApolloOpenApiClient apolloOpenApiClient;
-    @Autowired
-    private Converter<List<FlowRuleEntity>, String> converter;
-
     @Override
-    public void publish(String app, List<FlowRuleEntity> rules) {
+    public void publish(String app, List<ClusterAppAssignMap> rules) {
         AssertUtil.notEmpty(app, "app name cannot be empty");
         if (rules == null) {
             return;
         }
-
         // Increase the configuration
-        String flowDataId = ApolloConfigUtil.getFlowDataId(app);
+        String flowDataId = ApolloConfigUtil.getClusterAssignDataId(app);
         OpenItemDTO openItemDTO = new OpenItemDTO();
         openItemDTO.setKey(flowDataId);
-        openItemDTO.setValue(converter.convert(rules));
+        openItemDTO.setValue(JSON.toJSONString(rules));
         openItemDTO.setComment("Program auto-join");
         openItemDTO.setDataChangeCreatedBy(ApolloConfig.SENTINEL_APOLLO_USER);
         apolloOpenApiClient.createOrUpdateItem(
                 ApolloConfig.SENTINEL_APOLLO_APPID, SENTINEL_APOLLO_ENV,
-                ApolloConfig.SENTINEL_APOLLO_CLUSTERNAME, ApolloConfig.SENTINEL_CLUSTER_APOLLO_NAMESPACE, openItemDTO);
+                ApolloConfig.SENTINEL_APOLLO_CLUSTERNAME, ApolloConfig.SENTINEL_APOLLO_NAMESPACE, openItemDTO);
 
         // Release configuration
         NamespaceReleaseDTO namespaceReleaseDTO = new NamespaceReleaseDTO();
@@ -72,7 +65,7 @@ public class ApolloFlowRulePublisher implements DynamicRulePublisher<List<FlowRu
         namespaceReleaseDTO.setReleasedBy(ApolloConfig.SENTINEL_APOLLO_USER);
         namespaceReleaseDTO.setReleaseTitle("Modify or add configurations");
         apolloOpenApiClient.publishNamespace(ApolloConfig.SENTINEL_APOLLO_APPID, SENTINEL_APOLLO_ENV,
-                ApolloConfig.SENTINEL_APOLLO_CLUSTERNAME, ApolloConfig.SENTINEL_CLUSTER_APOLLO_NAMESPACE,
+                ApolloConfig.SENTINEL_APOLLO_CLUSTERNAME, ApolloConfig.SENTINEL_APOLLO_NAMESPACE,
                 namespaceReleaseDTO);
     }
 }

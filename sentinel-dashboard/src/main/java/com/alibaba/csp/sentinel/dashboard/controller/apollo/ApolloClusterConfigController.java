@@ -13,20 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.csp.sentinel.dashboard.controller.cluster;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
+package com.alibaba.csp.sentinel.dashboard.controller.apollo;
 
 import com.alibaba.csp.sentinel.cluster.ClusterStateManager;
 import com.alibaba.csp.sentinel.dashboard.client.CommandNotFoundException;
-import com.alibaba.csp.sentinel.dashboard.discovery.AppManagement;
-import com.alibaba.csp.sentinel.util.StringUtil;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.SentinelVersion;
+import com.alibaba.csp.sentinel.dashboard.discovery.AppInfo;
+import com.alibaba.csp.sentinel.dashboard.discovery.AppManagement;
+import com.alibaba.csp.sentinel.dashboard.domain.Result;
+import com.alibaba.csp.sentinel.dashboard.domain.cluster.request.ClusterAppAssignMap;
 import com.alibaba.csp.sentinel.dashboard.domain.cluster.request.ClusterClientModifyRequest;
 import com.alibaba.csp.sentinel.dashboard.domain.cluster.request.ClusterModifyRequest;
 import com.alibaba.csp.sentinel.dashboard.domain.cluster.request.ClusterServerModifyRequest;
@@ -34,30 +29,32 @@ import com.alibaba.csp.sentinel.dashboard.domain.cluster.state.AppClusterClientS
 import com.alibaba.csp.sentinel.dashboard.domain.cluster.state.AppClusterServerStateWrapVO;
 import com.alibaba.csp.sentinel.dashboard.domain.cluster.state.ClusterUniversalStatePairVO;
 import com.alibaba.csp.sentinel.dashboard.domain.cluster.state.ClusterUniversalStateVO;
+import com.alibaba.csp.sentinel.dashboard.rule.DynamicRulePublisher;
 import com.alibaba.csp.sentinel.dashboard.service.ClusterConfigService;
 import com.alibaba.csp.sentinel.dashboard.util.ClusterEntityUtils;
 import com.alibaba.csp.sentinel.dashboard.util.VersionUtils;
-import com.alibaba.csp.sentinel.dashboard.domain.Result;
+import com.alibaba.csp.sentinel.util.StringUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author Eric Zhao
  * @since 1.4.0
  */
 @RestController
-@RequestMapping(value = "/cluster1")
-public class ClusterConfigController {
+@RequestMapping(value = "/cluster")
+public class ApolloClusterConfigController {
 
-    private final Logger logger = LoggerFactory.getLogger(ClusterConfigController.class);
+    private final Logger logger = LoggerFactory.getLogger(ApolloClusterConfigController.class);
 
     private final SentinelVersion version140 = new SentinelVersion().setMajorVersion(1).setMinorVersion(4);
 
@@ -66,6 +63,11 @@ public class ClusterConfigController {
 
     @Autowired
     private ClusterConfigService clusterConfigService;
+
+
+    @Qualifier("apolloClusterAppAssignProvider")
+    private DynamicRulePublisher<AppInfo> rulePublisher;
+
 
     @PostMapping("/config/modify_single")
     public Result<Boolean> apiModifyClusterConfig(@RequestBody String payload) {

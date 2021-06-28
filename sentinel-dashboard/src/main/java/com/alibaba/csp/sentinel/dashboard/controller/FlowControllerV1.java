@@ -51,7 +51,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Eric Zhao
  */
 @RestController
-@RequestMapping(value = "/v1/flow")
+@RequestMapping(value = "/v11/flow")
 public class FlowControllerV1 {
 
     private final Logger logger = LoggerFactory.getLogger(FlowControllerV1.class);

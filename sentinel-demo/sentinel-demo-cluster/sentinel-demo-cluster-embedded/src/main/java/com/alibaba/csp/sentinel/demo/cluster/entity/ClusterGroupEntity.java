@@ -26,6 +26,7 @@ public class ClusterGroupEntity {
     private String machineId;
     private String ip;
     private Integer port;
+    private Integer maxAllowedQps;
 
     private Set<String> clientSet;
 
@@ -54,6 +55,14 @@ public class ClusterGroupEntity {
     public ClusterGroupEntity setPort(Integer port) {
         this.port = port;
         return this;
+    }
+
+    public Integer getMaxAllowedQps() {
+        return maxAllowedQps;
+    }
+
+    public void setMaxAllowedQps(Integer maxAllowedQps) {
+        this.maxAllowedQps = maxAllowedQps;
     }
 
     public Set<String> getClientSet() {

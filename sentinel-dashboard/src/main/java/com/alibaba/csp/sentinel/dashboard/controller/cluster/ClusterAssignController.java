@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 服务节点集群分配接口
  */
 @RestController
-@RequestMapping("/cluster/assign")
+@RequestMapping("/cluster1/assign")
 public class ClusterAssignController {
 
     private final Logger logger = LoggerFactory.getLogger(ClusterAssignController.class);

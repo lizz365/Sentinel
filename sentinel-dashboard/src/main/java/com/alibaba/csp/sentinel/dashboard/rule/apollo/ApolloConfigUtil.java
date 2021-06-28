@@ -21,12 +21,23 @@ package com.alibaba.csp.sentinel.dashboard.rule.apollo;
  */
 public final class ApolloConfigUtil {
 
+    /**
+     * 流控配置
+     */
     public static final String FLOW_DATA_ID_POSTFIX = "-flow-rules";
+
+    /**
+     * 集群服务配置
+     */
+    public static final String CLUSTER_ASSIGN_DATA_ID_POSTFIX = "-cluster-assign-config";
 
     private ApolloConfigUtil() {
     }
 
     public static String getFlowDataId(String appName) {
         return String.format("%s%s", appName, FLOW_DATA_ID_POSTFIX);
+    }
+    public static String getClusterAssignDataId(String appName) {
+        return String.format("%s%s", appName, CLUSTER_ASSIGN_DATA_ID_POSTFIX);
     }
 }
