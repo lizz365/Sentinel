@@ -17,13 +17,12 @@ package com.alibaba.csp.sentinel.dashboard.rule.apollo;
 
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.FlowRuleEntity;
 import com.alibaba.csp.sentinel.dashboard.rule.DynamicRulePublisher;
+import com.alibaba.csp.sentinel.dashboard.service.DBService;
 import com.alibaba.csp.sentinel.datasource.Converter;
 
 import com.alibaba.csp.sentinel.util.AssertUtil;
 
 import com.ctrip.framework.apollo.openapi.client.ApolloOpenApiClient;
-import com.ctrip.framework.apollo.openapi.dto.NamespaceReleaseDTO;
-import com.ctrip.framework.apollo.openapi.dto.OpenItemDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -36,14 +35,9 @@ import java.util.List;
  */
 @Component("apolloFlowRulePublisher")
 public class ApolloFlowRulePublisher implements DynamicRulePublisher<List<FlowRuleEntity>> {
-    /**
-     * apollo动态环境配置，便于测试、线上环境切换
-     */
-    @Value("${sentinel.apollo.env}")
-    public String SENTINEL_APOLLO_ENV;
-
     @Autowired
-    private ApolloOpenApiClient apolloOpenApiClient;
+    private DBService apolloDBService;
+
     @Autowired
     private Converter<List<FlowRuleEntity>, String> converter;
 
@@ -53,26 +47,8 @@ public class ApolloFlowRulePublisher implements DynamicRulePublisher<List<FlowRu
         if (rules == null) {
             return;
         }
-
         // Increase the configuration
-        String flowDataId = ApolloConfigUtil.getFlowDataId(app);
-        OpenItemDTO openItemDTO = new OpenItemDTO();
-        openItemDTO.setKey(flowDataId);
-        openItemDTO.setValue(converter.convert(rules));
-        openItemDTO.setComment("Program auto-join");
-        openItemDTO.setDataChangeCreatedBy(ApolloConfig.SENTINEL_APOLLO_USER);
-        apolloOpenApiClient.createOrUpdateItem(
-                ApolloConfig.SENTINEL_APOLLO_APPID, SENTINEL_APOLLO_ENV,
-                ApolloConfig.SENTINEL_APOLLO_CLUSTERNAME, ApolloConfig.SENTINEL_CLUSTER_APOLLO_NAMESPACE, openItemDTO);
+        apolloDBService.createOrUpdateItem(app, ApolloConfig.SENTINEL_CLUSTER_APOLLO_NAMESPACE, converter.convert(rules));
 
-        // Release configuration
-        NamespaceReleaseDTO namespaceReleaseDTO = new NamespaceReleaseDTO();
-        namespaceReleaseDTO.setEmergencyPublish(true);
-        namespaceReleaseDTO.setReleaseComment("Modify or add configurations");
-        namespaceReleaseDTO.setReleasedBy(ApolloConfig.SENTINEL_APOLLO_USER);
-        namespaceReleaseDTO.setReleaseTitle("Modify or add configurations");
-        apolloOpenApiClient.publishNamespace(ApolloConfig.SENTINEL_APOLLO_APPID, SENTINEL_APOLLO_ENV,
-                ApolloConfig.SENTINEL_APOLLO_CLUSTERNAME, ApolloConfig.SENTINEL_CLUSTER_APOLLO_NAMESPACE,
-                namespaceReleaseDTO);
     }
 }

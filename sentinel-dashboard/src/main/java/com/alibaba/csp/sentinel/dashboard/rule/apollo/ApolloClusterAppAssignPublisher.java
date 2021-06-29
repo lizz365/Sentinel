@@ -17,13 +17,10 @@ package com.alibaba.csp.sentinel.dashboard.rule.apollo;
 
 import com.alibaba.csp.sentinel.dashboard.domain.cluster.request.ClusterAppAssignMap;
 import com.alibaba.csp.sentinel.dashboard.rule.DynamicRulePublisher;
+import com.alibaba.csp.sentinel.dashboard.service.DBService;
 import com.alibaba.csp.sentinel.util.AssertUtil;
 import com.alibaba.fastjson.JSON;
-import com.ctrip.framework.apollo.openapi.client.ApolloOpenApiClient;
-import com.ctrip.framework.apollo.openapi.dto.NamespaceReleaseDTO;
-import com.ctrip.framework.apollo.openapi.dto.OpenItemDTO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -33,14 +30,9 @@ import java.util.List;
  */
 @Component("apolloClusterAppAssignPublisher")
 public class ApolloClusterAppAssignPublisher implements DynamicRulePublisher<List<ClusterAppAssignMap>> {
-    /**
-     * apollo动态环境配置，便于测试、线上环境切换
-     */
-    @Value("${sentinel.apollo.env}")
-    public String SENTINEL_APOLLO_ENV;
-
     @Autowired
-    private ApolloOpenApiClient apolloOpenApiClient;
+    private DBService apolloDBService;
+
     @Override
     public void publish(String app, List<ClusterAppAssignMap> rules) {
         AssertUtil.notEmpty(app, "app name cannot be empty");
@@ -48,24 +40,6 @@ public class ApolloClusterAppAssignPublisher implements DynamicRulePublisher<Lis
             return;
         }
         // Increase the configuration
-        String flowDataId = ApolloConfigUtil.getClusterAssignDataId(app);
-        OpenItemDTO openItemDTO = new OpenItemDTO();
-        openItemDTO.setKey(flowDataId);
-        openItemDTO.setValue(JSON.toJSONString(rules));
-        openItemDTO.setComment("Program auto-join");
-        openItemDTO.setDataChangeCreatedBy(ApolloConfig.SENTINEL_APOLLO_USER);
-        apolloOpenApiClient.createOrUpdateItem(
-                ApolloConfig.SENTINEL_APOLLO_APPID, SENTINEL_APOLLO_ENV,
-                ApolloConfig.SENTINEL_APOLLO_CLUSTERNAME, ApolloConfig.SENTINEL_APOLLO_NAMESPACE, openItemDTO);
-
-        // Release configuration
-        NamespaceReleaseDTO namespaceReleaseDTO = new NamespaceReleaseDTO();
-        namespaceReleaseDTO.setEmergencyPublish(true);
-        namespaceReleaseDTO.setReleaseComment("Modify or add configurations");
-        namespaceReleaseDTO.setReleasedBy(ApolloConfig.SENTINEL_APOLLO_USER);
-        namespaceReleaseDTO.setReleaseTitle("Modify or add configurations");
-        apolloOpenApiClient.publishNamespace(ApolloConfig.SENTINEL_APOLLO_APPID, SENTINEL_APOLLO_ENV,
-                ApolloConfig.SENTINEL_APOLLO_CLUSTERNAME, ApolloConfig.SENTINEL_APOLLO_NAMESPACE,
-                namespaceReleaseDTO);
+        apolloDBService.createOrUpdateItem(app, ApolloConfig.SENTINEL_APOLLO_NAMESPACE, JSON.toJSONString(rules));
     }
 }
