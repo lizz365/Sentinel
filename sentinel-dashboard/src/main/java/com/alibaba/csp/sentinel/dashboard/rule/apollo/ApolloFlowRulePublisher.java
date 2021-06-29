@@ -48,7 +48,8 @@ public class ApolloFlowRulePublisher implements DynamicRulePublisher<List<FlowRu
             return;
         }
         // Increase the configuration
-        apolloDBService.createOrUpdateItem(app, ApolloConfig.SENTINEL_CLUSTER_APOLLO_NAMESPACE, converter.convert(rules));
+        String flowDataId = ApolloConfigUtil.getFlowDataId(app);
+        apolloDBService.createOrUpdateItem(app, ApolloConfig.SENTINEL_CLUSTER_APOLLO_NAMESPACE, flowDataId, converter.convert(rules));
 
     }
 }

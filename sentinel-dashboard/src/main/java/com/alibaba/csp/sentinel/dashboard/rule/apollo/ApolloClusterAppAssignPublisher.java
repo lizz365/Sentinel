@@ -40,6 +40,7 @@ public class ApolloClusterAppAssignPublisher implements DynamicRulePublisher<Lis
             return;
         }
         // Increase the configuration
-        apolloDBService.createOrUpdateItem(app, ApolloConfig.SENTINEL_APOLLO_NAMESPACE, JSON.toJSONString(rules));
+        String flowDataId = ApolloConfigUtil.getClusterAssignDataId(app);
+        apolloDBService.createOrUpdateItem(app, ApolloConfig.SENTINEL_APOLLO_NAMESPACE, flowDataId, JSON.toJSONString(rules));
     }
 }

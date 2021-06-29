@@ -34,11 +34,13 @@ public class ApolloConfig {
     /**
      * apollo系统地址
      */
-    public static final String SENTINEL_APOLLO_URL = "http://apollo.lizz.com";
+    @Value("${sentinel.apollo.url}")
+    private String SENTINEL_APOLLO_URL;
     /**
      * 通过api操作apollo的token，必须与操作user匹配，在apollo管理页面中开通
      */
-    public static final String SENTINEL_APOLLO_TOKEN = "xxxx";
+    @Value("${sentinel.apollo.token}")
+    private String SENTINEL_APOLLO_TOKEN;
     /**
      * apollo中存储数据的项目id
      */

@@ -30,9 +30,8 @@ public class ApolloDBServiceImpl implements DBService {
     private ApolloOpenApiClient apolloOpenApiClient;
 
     @Override
-    public void createOrUpdateItem(String app, String namespace, String rules) {
+    public void createOrUpdateItem(String app, String namespace, String flowDataId, String rules) {
         // Increase the configuration
-        String flowDataId = ApolloConfigUtil.getClusterAssignDataId(app);
         OpenItemDTO openItemDTO = new OpenItemDTO();
         openItemDTO.setKey(flowDataId);
         openItemDTO.setValue(rules);
