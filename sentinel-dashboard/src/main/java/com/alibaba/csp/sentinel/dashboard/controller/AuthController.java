@@ -46,6 +46,12 @@ public class AuthController {
     @Value("${auth.password:sentinel}")
     private String authPassword;
 
+    @Value("${guest.username:guest}")
+    private String guestUsername;
+
+    @Value("${guest.password:guest}")
+    private String guestPassword;
+
     @Autowired
     private AuthService<HttpServletRequest> authService;
 
@@ -64,15 +70,15 @@ public class AuthController {
          * auth will pass, as the front side validate the input which can't be blank,
          * so user can input any username or password(both are not blank) to login in that case.
          */
-        if (StringUtils.isNotBlank(authUsername) && !authUsername.equals(username)
-                || StringUtils.isNotBlank(authPassword) && !authPassword.equals(password)) {
+        if ((authUsername.equals(username) && authPassword.equals(password))
+                || (guestUsername.equals(username) && guestUsername.equals(password))) {
+            AuthService.AuthUser authUser = new SimpleWebAuthServiceImpl.SimpleWebAuthUserImpl(username);
+            request.getSession().setAttribute(SimpleWebAuthServiceImpl.WEB_SESSION_KEY, authUser);
+            return Result.ofSuccess(authUser);
+        } else {
             LOGGER.error("Login failed: Invalid username or password, username=" + username);
             return Result.ofFail(-1, "Invalid username or password");
         }
-
-        AuthService.AuthUser authUser = new SimpleWebAuthServiceImpl.SimpleWebAuthUserImpl(username);
-        request.getSession().setAttribute(SimpleWebAuthServiceImpl.WEB_SESSION_KEY, authUser);
-        return Result.ofSuccess(authUser);
     }
 
     @PostMapping(value = "/logout")

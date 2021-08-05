@@ -61,6 +61,13 @@ public class DefaultLoginAuthenticationFilter implements LoginAuthenticationFilt
     @Value("#{'${auth.filter.exclude-url-suffixes}'.split(',')}")
     private List<String> authFilterExcludeUrlSuffixes;
 
+    @Value("#{'${guest.filter.url}'.split(',')}")
+    private List<String> guestFilterUrl;
+
+
+    @Value("${guest.username:guest}")
+    private String guestUsername;
+
     /**
      * Authentication using AuthService interface.
      */
@@ -114,7 +121,19 @@ public class DefaultLoginAuthenticationFilter implements LoginAuthenticationFilt
             // If auth fail, set response status code to 401
             httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
         } else {
-            chain.doFilter(request, response);
+            if (authUser.getLoginName().equals(guestUsername)) {
+                // Exclude the urls which needn't auth
+                boolean guestFilterUrlMatch = guestFilterUrl.stream()
+                        .anyMatch(authFilterExcludeUrl -> PATH_MATCHER.match(authFilterExcludeUrl, servletPath));
+                if(guestFilterUrlMatch){
+                    chain.doFilter(request, response);
+                }else{
+                    // If auth fail, set response status code to 401
+                    httpResponse.setStatus(HttpStatus.NOT_FOUND.value());
+                }
+            }else{
+                chain.doFilter(request, response);
+            }
         }
     }
 
